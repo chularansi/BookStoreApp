@@ -1,0 +1,58 @@
+﻿using BookStore.API.Data;
+using BookStore.API.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace BookStore.API.Services
+{
+    public class BookRepository : IBookRepository
+    {
+        private readonly BookStoreDbContext dbContext;
+
+        public BookRepository(BookStoreDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
+
+        public async Task<bool> Create(Book entity)
+        {
+            await dbContext.Books.AddAsync(entity);
+            return await Save();
+        }
+
+        public async Task<bool> Delete(Book entity)
+        {
+            dbContext.Books.Remove(entity);
+            return await Save();
+        }
+
+        public async Task<IList<Book>> FindAll()
+        {
+            return await dbContext.Books.Include(q => q.Author).ToListAsync();
+        }
+
+        public async Task<Book> FindById(int id)
+        {
+            return await dbContext.Books.Include(q => q.Author).FirstOrDefaultAsync(q => q.Id == id);
+        }
+
+        public async Task<bool> IsExists(int id)
+        {
+            return await dbContext.Books.AnyAsync(q => q.Id == id);
+        }
+
+        public async Task<bool> Save()
+        {
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> Update(Book entity)
+        {
+            dbContext.Books.Update(entity);
+            return await Save();
+        }
+    }
+}
